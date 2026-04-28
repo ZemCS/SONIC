@@ -1,6 +1,6 @@
-# Mood Detection Project
+# SONIC
 
-This project is a comprehensive mood detection application that analyzes user inputs (audio, images, and lyrics) to determine emotional states. It integrates with Spotify for music recommendations based on detected moods. The application consists of a Python backend for AI model inference and a Flutter frontend for the user interface.
+This project is a comprehensive mood detection application that analyzes user inputs (audio, images, and lyrics) to determine emotional states. It integrates with Spotify for music recommendations based on detected moods. The application consists of a Python backend for multimodal AI model inference and a Flutter frontend for the user interface.
 
 ## Features
 
@@ -65,7 +65,7 @@ This project is a comprehensive mood detection application that analyzes user in
 ## Prerequisites
 
 ### Backend (Linux/WSL)
-- Python 3.8 or higher
+- Python 3.12
 - pip (Python package installer)
 - Virtual environment tools (venv)
 - Ngrok account (for tunneling, if needed)
@@ -236,7 +236,3 @@ flutter test
 3. Make your changes
 4. Run tests
 5. Submit a pull request
-
-## License
-
-[Add your license information here]
