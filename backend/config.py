@@ -60,7 +60,7 @@ class Config:
         BASE_DIR / "models" / "image_mood_model" / "image_model_v2.pth"
     )
     UPLOADS_DIR = str(BASE_DIR / "uploads")
-    IMAGE_CLASSES = ["aggressive", "calm", "joyful", "sad", "energetic"]
+    IMAGE_CLASSES = ["aggressive", "calm", "energetic", "joyful", "romantic", "sad"]
 
     # --- Song Pipeline Paths ---
     SONGS_DIR = str(BASE_DIR / "music_library")
@@ -83,13 +83,13 @@ class Config:
     AUDIO_BATCH_SIZE = 4
 
     MANUAL_WEIGHTS = {
-        "aggressive": {"text": 0.30, "audio": 0.70},
-        "calm": {"text": 0.30, "audio": 0.70},
-        "energetic": {"text": 0.40, "audio": 0.60},
-        "joyful": {"text": 0.7, "audio": 0.30},
-        "romantic": {"text": 0.70, "audio": 0.30},
-        "sad": {"text": 0.70, "audio": 0.30},
-        "default": {"text": 0.55, "audio": 0.45},
+        "aggressive": {"text": 0.40, "audio": 0.60},
+        "calm": {"text": 0.40, "audio": 0.60},
+        "energetic": {"text": 0.50, "audio": 0.50},
+        "joyful": {"text": 0.8, "audio": 0.20},
+        "romantic": {"text": 0.80, "audio": 0.20},
+        "sad": {"text": 0.80, "audio": 0.20},
+        "default": {"text": 0.65, "audio": 0.35},
     }
 
     # --- Spotify API ---
@@ -97,7 +97,7 @@ class Config:
     SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_SECRET")
     SPOTIFY_REDIRECT_URI = os.getenv(
         "SPOTIFY_REDIRECT_URI",
-        "https://desultory-damion-semineutral.ngrok-free.dev/spotify/callback",
+        "https://4c58-154-57-217-191.ngrok-free.app/spotify/callback",
     )
     SPOTIFY_SCOPE = (
         "user-read-recently-played user-modify-playback-state user-read-playback-state"

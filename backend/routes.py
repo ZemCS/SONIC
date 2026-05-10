@@ -56,11 +56,10 @@ def predict_image_endpoint():
         from pipeline import get_image_transform
         input_tensor = get_image_transform()(image).unsqueeze(0).to(config.DEVICE)
 
-        # Safety check: ensures model is on the correct device (fix for "Input type and weight type" mismatch)
+        # Model is already on the correct device from initialization
+        # No need to move during inference - just ensure input tensor is on same device
         model_device = next(state.image_model.parameters()).device
-        if model_device != config.DEVICE:
-            print(UI.warning(f"Device mismatch detected: Model was on {model_device}, moving to {config.DEVICE}"))
-            state.image_model.to(config.DEVICE)
+        input_tensor = input_tensor.to(model_device)
 
         with torch.no_grad():
             output = state.image_model(input_tensor)

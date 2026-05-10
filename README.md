@@ -1,6 +1,6 @@
 # SONIC
 
-This project is a comprehensive mood detection application that analyzes user inputs (audio, images, and lyrics) to determine emotional states. It integrates with Spotify for music recommendations based on detected moods. The application consists of a Python backend for multimodal AI model inference and a Flutter frontend for the user interface.
+This project is a comprehensive mood detection application that analyzes user inputs (audio, images, and lyrics) to determine emotional states. It integrates with Spotify for music recommendations based on detected moods. In particular, the backend classifies images into six moods — aggressive, calm, energetic, joyful, romantic, and sad — and then recommends songs whose stored mood labels match the detected image mood. The application consists of a Python backend for multimodal AI model inference and a Flutter frontend for the user interface.
 
 ## Features
 
@@ -100,12 +100,14 @@ This project is a comprehensive mood detection application that analyzes user in
    ```
 
 5. **Set up environment variables:**
-   Create a `.env` file in the backend directory with necessary configurations (e.g., database URL, Spotify API keys, etc.). Example:
+   Create a `.env` file in the backend directory with necessary configurations (e.g., MongoDB URI, Spotify API keys, ngrok token, etc.). Example:
    ```
-   DATABASE_URL=your_database_url
+   MONGO_URI=mongodb://localhost:27017/
    SPOTIFY_CLIENT_ID=your_spotify_client_id
-   SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-   SECRET_KEY=your_secret_key
+   SPOTIFY_SECRET=your_spotify_client_secret
+   SPOTIFY_REDIRECT_URI=https://your-ngrok-url.ngrok-free.app/spotify/callback
+   JWT_SECRET_KEY=your_jwt_secret_key
+   NGROK_AUTH_TOKEN=your_ngrok_auth_token
    ```
 
 6. **Set up the database:**
@@ -117,7 +119,8 @@ This project is a comprehensive mood detection application that analyzes user in
 
 7. **For ngrok tunneling (if needed):**
    - Install ngrok if not already installed
-   - Run `python start_ngrok.py` to start tunneling
+   - Run `python main.py` to start the backend; it will automatically launch ngrok, wait for the public URL, and update `SPOTIFY_REDIRECT_URI` in `.env`
+   - You can still run `python start_ngrok.py` directly if you want to manage ngrok manually
 
 ### Frontend Setup
 

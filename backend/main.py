@@ -1,6 +1,9 @@
 import os
+import sys
+import time
 import threading
 import warnings
+import subprocess
 import torch
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
@@ -8,6 +11,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from datetime import datetime
 from pathlib import Path
+from flask_cors import CORS
 
 # Import our new modules
 from config import config, UI
@@ -34,6 +38,8 @@ transformers.utils.import_utils.check_torch_load_is_safe = lambda: None
 transformers.modeling_utils.check_torch_load_is_safe = lambda: None
 
 app = Flask(__name__)
+
+CORS(app)
 
 # --- Extension Initialization ---
 app.config["JWT_SECRET_KEY"] = config.JWT_SECRET_KEY
@@ -208,7 +214,104 @@ def _free_port(port):
     except Exception:
         pass
 
+
+def launch_ngrok_process():
+    # Clear the old ngrok URL file to ensure we wait for a fresh one
+    ngrok_file = Path(__file__).resolve().parent / "ngrok_url.txt"
+    if ngrok_file.exists():
+        ngrok_file.unlink()
+    
+    script_path = Path(__file__).resolve().parent / "start_ngrok.py"
+    proc = subprocess.Popen(
+        [sys.executable, str(script_path)],
+        cwd=str(script_path.parent),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    print(UI.info("Launching ngrok subprocess..."))
+    return proc
+
+
+def wait_for_ngrok_url(timeout=30):
+    ngrok_file = Path(__file__).resolve().parent / "ngrok_url.txt"
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if ngrok_file.exists():
+            url = ngrok_file.read_text().strip()
+            if url and not url.startswith("ERROR"):
+                return url
+        time.sleep(1)
+    raise TimeoutError("Timed out waiting for ngrok_url.txt to contain a valid URL.")
+
+
+def update_spotify_redirect_uri():
+    """Update Spotify redirect URI in .env file with current ngrok URL."""
+    ngrok_file = Path(__file__).resolve().parent / "ngrok_url.txt"
+    env_file = Path(__file__).resolve().parent / ".env"
+    
+    if not ngrok_file.exists():
+        print(UI.warning("ngrok_url.txt not found. Skipping Spotify redirect URI update."))
+        return
+    
+    try:
+        with open(ngrok_file, "r") as f:
+            ngrok_url = f.read().strip()
+        
+        if not ngrok_url or "ERROR" in ngrok_url:
+            print(UI.warning(f"Invalid ngrok URL: {ngrok_url}. Skipping update."))
+            return
+        
+        # Remove any trailing slash and ensure it's just the base URL
+        base_url = ngrok_url.rstrip('/')
+        new_redirect_uri = f"{base_url}/spotify/callback"
+        
+        # Read current .env content
+        with open(env_file, "r") as f:
+            lines = f.readlines()
+        
+        # Update or add the SPOTIFY_REDIRECT_URI line
+        updated = False
+        for i, line in enumerate(lines):
+            if line.startswith("SPOTIFY_REDIRECT_URI="):
+                lines[i] = f"SPOTIFY_REDIRECT_URI={new_redirect_uri}\n"
+                updated = True
+                break
+        
+        if not updated:
+            lines.append(f"SPOTIFY_REDIRECT_URI={new_redirect_uri}\n")
+        
+        # Write back to .env
+        with open(env_file, "w") as f:
+            f.writelines(lines)
+        
+        print(UI.success(f"Updated Spotify redirect URI to: {new_redirect_uri}"))
+        
+        # Reload environment variables to pick up the changes
+        from dotenv import load_dotenv
+        load_dotenv(override=True)
+        
+        # Update the config object with the new value
+        import config
+        config.config.SPOTIFY_REDIRECT_URI = new_redirect_uri
+        
+        # Update the global Spotify OAuth object
+        import spotify_utils
+        spotify_utils.global_sp_oauth = spotify_utils.get_spotify_oauth()
+            
+    except Exception as e:
+        print(UI.error(f"Failed to update Spotify redirect URI: {e}"))
+
 if __name__ == "__main__":
+    ngrok_process = launch_ngrok_process()
+    try:
+        wait_for_ngrok_url()
+    except Exception as e:
+        print(UI.error(f"Ngrok startup failed: {e}"))
+        ngrok_process.terminate()
+        sys.exit(1)
+
+    update_spotify_redirect_uri()
     _free_port(5000)
     load_models()
     threading.Thread(target=build_song_database, daemon=True).start()

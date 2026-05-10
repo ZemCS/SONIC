@@ -43,12 +43,18 @@ from config import config, UI
 from database import fused_inferences, audio_inferences, lyrics_inferences
 
 class MoodViT(nn.Module):
-    def __init__(self, num_classes=5, dropout_rate=0.3, freeze_backbone=False):
+    def __init__(self, num_classes=6, dropout_rate=0.3, freeze_backbone=False):
         super(MoodViT, self).__init__()
+        
+        # Load pre-trained ViT
         self.vit = vit_b_16(weights=ViT_B_16_Weights.IMAGENET1K_V1)
+        
+        # Option to freeze backbone
         if freeze_backbone:
             for param in self.vit.parameters():
                 param.requires_grad = False
+                
+        # Replace the classifier with your sophisticated head
         feature_dim = self.vit.heads.head.in_features
         self.vit.heads = nn.Sequential(
             nn.Dropout(dropout_rate),
@@ -60,6 +66,12 @@ class MoodViT(nn.Module):
             nn.Dropout(dropout_rate),
             nn.Linear(256, num_classes),
         )
+
+        # Initialize the new layers (matches the retraining script logic)
+        for module in self.vit.heads:
+            if isinstance(module, nn.Linear):
+                nn.init.xavier_uniform_(module.weight)
+                nn.init.constant_(module.bias, 0)
 
     def forward(self, x):
         return self.vit(x)
@@ -290,6 +302,21 @@ class MultimodalMoodClassifier:
                 try:
                     translated_lyrics = GoogleTranslator(source="auto", target="en").translate(lyrics_text)
                     lyrics_text = translated_lyrics
+                    
+                    # --- NEW DEBUGGING CODE: Output translated lyrics to a .txt file ---
+                    # Create a safe filename based on the original audio file
+                    safe_name = os.path.splitext(filename)[0]
+                    debug_filepath = f"{safe_name}_translated.txt"
+                    
+                    try:
+                        with open(debug_filepath, "w", encoding="utf-8") as text_file:
+                            text_file.write(f"Original Language: {detected_lang}\n\n")
+                            text_file.write(translated_lyrics)
+                        print(f"  > [Debug] Translated lyrics saved to: {debug_filepath}")
+                    except Exception as io_err:
+                        print(f"  > [Debug] Failed to save lyrics .txt file: {io_err}")
+                    # -------------------------------------------------------------------
+
                 except Exception as e:
                     print(f"  > Translation Error: {e}")
         else:
