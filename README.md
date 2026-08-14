@@ -1,4 +1,4 @@
-# SONIC
+# Sound Output via Neural Image & Mood Context (SONIC)
 
 This project is a comprehensive mood detection application that analyzes user inputs (audio, images, and lyrics) to determine emotional states. It integrates with Spotify for music recommendations based on detected moods. In particular, the backend classifies images into six moods — aggressive, calm, energetic, joyful, romantic, and sad — and then recommends songs whose stored mood labels match the detected image mood. The application consists of a Python backend for multimodal AI model inference and a Flutter frontend for the user interface.
 
